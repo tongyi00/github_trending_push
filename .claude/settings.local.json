@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth status)",
+      "Bash(winget install:*)",
+      "Bash(choco:*)",
+      "WebSearch",
+      "Bash(git init)",
+      "Bash(python:*)",
+      "WebFetch(domain:build.nvidia.com)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(echo:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)"
+    ]
+  }
+}

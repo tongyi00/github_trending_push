@@ -1,0 +1,101 @@
+# GitHub Trending Push Configuration
+# Copy this file to config.yaml and fill in your credentials
+
+github:
+  token: "ghp_xxxxxxxxxxxxxxxxxxxx"  # Optional: for higher API rate limits
+
+ai_models:
+  enabled:
+    - deepseek
+    - nvidia
+#    - glm
+#    - kimi
+
+  deepseek:
+    api_key: "sk-xxxxxxxxxxxxxxxx"
+    base_url: "https://api.deepseek.com/v1"
+    model: "deepseek-chat"
+    temperature: 0.7
+    max_tokens: 500
+
+  nvidia:
+    api_key: "nvapi-xxxxxxxxxxxxxxxx"
+    base_url: "https://integrate.api.nvidia.com/v1"
+    model: "meta/llama3-70b-instruct"
+    temperature: 0.7
+    max_tokens: 500
+
+  glm:
+    api_key: "xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx"
+    model: "glm-4"
+    temperature: 0.7
+    max_tokens: 500
+
+  kimi:
+    api_key: "sk-xxxxxxxxxxxxxxxx"
+    base_url: "https://api.moonshot.cn/v1"
+    model: "moonshot-v1-8k"
+    temperature: 0.3
+    max_tokens: 500
+
+email:
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  use_ssl: true
+  sender: "tmj20000509@gmail.com"
+  password: "your_smtp_authorization_code"  # SMTP authorization code, NOT login password
+  recipients:
+    - "recipient1@example.com"
+    - "recipient2@example.com"
+
+scheduler:
+  timezone: "Asia/Shanghai"
+  daily:
+    enabled: true
+    time: "08:00"
+  weekly:
+    enabled: true
+    day: "sunday"
+    time: "22:00"
+  monthly:
+    enabled: true
+    time: "22:00"  # Last day of month
+
+logging:
+  level: "INFO"
+  file: "logs/trending.log"
+  rotation: "10 MB"
+  retention: "7 days"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  backup_count: 5
+
+prompt_template: |
+  你是GitHub项目分析专家，请用中文为以下项目生成准确的总结：
+
+  **项目信息：**
+  - 名称: {name}
+  - 描述: {description}
+  - Stars: {stars}
+  - 语言: {language}
+  - 最近更新: {updated_at}
+
+  **输出格式要求：**
+
+  ### 🎯 亮点
+  [用一句话概括核心价值，让人一眼看懂]
+
+  ### 💡 核心功能
+  - [功能1]
+  - [功能2]
+  - [功能3]
+
+  ### 🔥 为什么值得关注
+  [用2-3句话说明技术亮点或创新点]
+
+  ### 👥 适合谁用
+  [目标用户群体]
+
+  请确保：
+  1. 语言通俗易懂，避免过度技术化
+  2. 突出差异化和创新点
+  3. 总长度控制在150字内
