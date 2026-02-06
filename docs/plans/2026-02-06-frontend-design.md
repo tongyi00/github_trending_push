@@ -1,87 +1,130 @@
-# GitHub Trending Dashboard 前端设计方案
+# GitHub Trending Dashboard - 前端设计方案
 
 **设计日期**: 2026-02-06
-**设计风格**: Anthropic 极简风格
-**目标用户**: 个人开发者（单用户看板）
+**设计目标**: 个人 GitHub Trending 看板，极简风格（Anthropic 风格）
 
 ---
 
-## 一、技术栈
+## 1. 项目定位
+
+### 使用场景
+- **个人看板**：单用户使用，无需登录认证
+- **快速浏览**：每日/每周查看趋势项目
+- **深度分析**：通过 AI 摘要和图表理解技术趋势
+
+### 核心价值
+- 极简界面，减少认知负担
+- AI 驱动的内容摘要
+- 数据可视化洞察
+
+---
+
+## 2. 技术栈
 
 ### 核心框架
 - **Vue 3** - Composition API (script setup)
-- **Pinia** - 轻量级状态管理
+- **Vite** - 构建工具
 - **Vue Router** - 路由管理
-- **Axios** - HTTP 客户端
+- **Pinia** - 状态管理
+
+### UI 与可视化
 - **ECharts** - 图表库（按需加载）
 - **Element Plus** - 最小化使用（仅图标和 Loading）
+- **自定义 CSS** - 极简样式系统
 
-### 设计原则
-1. **极简主义** - 去除不必要的边框和装饰
-2. **大量留白** - 提供视觉呼吸感
-3. **无彩色主导** - 黑/白/灰为主，单一强调色（淡蓝 #3B82F6）
-4. **克制动画** - 仅在必要的加载和交互反馈时使用
-5. **字体层级清晰** - 避免过多字号变化
+### HTTP 客户端
+- **Axios** - API 调用封装
 
----
-
-## 二、路由结构
-
-```
-/                         首页仪表盘（平衡布局）
-/project/:owner/:name     项目详情页（AI 摘要、历史趋势）
-/analytics                深度分析页（多图表对比）
-/settings                 订阅配置页
-```
+### 开发工具
+- **ESLint** - 代码质量
+- **Prettier** - 代码格式化（可选）
 
 ---
 
-## 三、目录结构
+## 3. 路由设计
+
+### 路由结构
+```
+/                        首页仪表盘（平衡布局）
+/project/:owner/:name    项目详情页
+/analytics               深度分析页
+/settings                订阅配置页
+```
+
+### 路由配置
+```javascript
+// router/index.js
+const routes = [
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: () => import('@/views/Dashboard.vue')
+  },
+  {
+    path: '/project/:owner/:name',
+    name: 'ProjectDetail',
+    component: () => import('@/views/ProjectDetail.vue')
+  },
+  {
+    path: '/analytics',
+    name: 'Analytics',
+    component: () => import('@/views/Analytics.vue')
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/Settings.vue')
+  }
+]
+```
+
+---
+
+## 4. 目录结构
 
 ```
 frontend/src/
-├── api/                  # API 调用封装
-│   ├── index.js         # Axios 实例配置
-│   ├── trending.js      # Trending 相关接口
-│   ├── stats.js         # 统计相关接口
-│   └── config.js        # 配置相关接口
-├── stores/               # Pinia stores
-│   ├── trending.js      # Trending 数据状态
-│   ├── stats.js         # 统计数据状态
-│   └── config.js        # 配置状态
-├── views/                # 页面组件
-│   ├── Dashboard.vue    # 首页仪表盘
-│   ├── ProjectDetail.vue # 项目详情
-│   ├── Analytics.vue    # 深度分析
-│   └── Settings.vue     # 订阅配置
-├── components/           # 可复用组件
-│   ├── ProjectCard.vue  # 项目卡片
-│   ├── StatCard.vue     # 统计卡片
-│   ├── LanguageChart.vue # 语言分布图
-│   └── KeywordCloud.vue # 关键词云
-├── composables/          # 组合式函数
-│   ├── useTimeRange.js  # 时间范围切换
-│   └── useChartTheme.js # 图表主题配置
-├── assets/               # 静态资源
+├── api/                    # API 调用封装
+│   └── index.js           # 统一导出所有 API 方法
+├── assets/                 # 静态资源
 │   └── styles/
-│       └── main.css     # 全局样式
-└── router/               # 路由配置
-    └── index.js
+│       ├── variables.css  # CSS 变量
+│       ├── reset.css      # CSS Reset
+│       └── global.css     # 全局样式
+├── components/             # 可复用组件
+│   ├── ProjectCard.vue    # 项目卡片
+│   ├── StatCard.vue       # 统计卡片
+│   ├── ChartContainer.vue # 图表容器
+│   ├── TimeRangeSelector.vue  # 时间范围选择器
+│   └── TagCloud.vue       # 关键词标签云
+├── composables/            # 组合式函数
+│   └── useTimeRange.js    # 时间范围管理
+├── router/                 # 路由配置
+│   └── index.js
+├── stores/                 # Pinia stores
+│   ├── trending.js        # Trending 数据状态
+│   └── subscription.js    # 订阅配置状态
+├── views/                  # 页面组件
+│   ├── Dashboard.vue      # 首页仪表盘
+│   ├── ProjectDetail.vue  # 项目详情
+│   ├── Analytics.vue      # 深度分析
+│   └── Settings.vue       # 订阅配置
+├── App.vue                 # 根组件
+└── main.js                 # 应用入口
 ```
 
 ---
 
-## 四、页面设计详情
+## 5. 页面设计
 
-### 4.1 首页仪表盘（Dashboard）
+### 5.1 首页仪表盘 (Dashboard.vue)
 
-**布局结构**
-
+#### 布局结构
 ```
 ┌─────────────────────────────────────────────┐
-│  [导航栏] Logo + 时间范围切换                 │
+│  [顶部导航] Logo + 时间范围切换               │
 ├─────────────────────────────────────────────┤
-│  [核心指标] 总项目数 | 本期新增 | 平均增长     │
+│  [核心指标] 总项目 | 新增 | 平均 Stars        │
 ├──────────────────────┬──────────────────────┤
 │  Left (60%)          │  Right (40%)         │
 │  ┌─────────────┐     │  ┌──────────────┐   │
@@ -91,49 +134,31 @@ frontend/src/
 │  │ Project #2  │     │  │ Top 关键词    │   │
 │  └─────────────┘     │  └──────────────┘   │
 │  ...                 │                      │
-│  [View All]          │                      │
 └──────────────────────┴──────────────────────┘
 ```
 
-**组件细节**
-
-1. **导航栏**
-   - 高度: 60px
-   - 背景: 白色
-   - 底部: 1px 细线分隔 (#E5E7EB)
-   - 左侧: Logo + "GitHub Trending" 文字
-   - 右侧: 时间范围切换器（daily/weekly/monthly）
+#### 功能模块
+1. **顶部导航栏**
+   - Logo + 标题
+   - 时间范围切换器（daily/weekly/monthly）
 
 2. **核心指标区**
-   - 2-3 个关键数字横向排列
-   - 每个指标: 大号数字(32px) + 小号标签(14px) + 增长箭头
-   - 无背景色，纯文字呈现
-   - 指标: 总项目数、本期新增、平均 Stars 增长
+   - 总项目数
+   - 本期新增项目
+   - 平均 Stars 增长
 
 3. **左侧项目列表**
    - Top 10 项目
-   - 极简卡片: 项目名、描述第一行、Stars、语言
-   - 无边框，仅底部分隔线
-   - Hover: 整行轻微背景色变化 (#F9FAFB)
-   - 点击: 跳转详情页
+   - 极简卡片：名称、描述、Stars、语言
+   - 点击跳转详情页
 
 4. **右侧可视化**
-   - 上半: 语言分布（简单饼图或横向条形图）
-   - 下半: 热门关键词（标签云，最多 10 个）
-   - 留白充足，图表精简
+   - 上：语言分布图（饼图/条形图）
+   - 下：热门关键词（标签云）
 
-**数据来源**
-- 核心指标: `/api/stats/overview`
-- 项目列表: `/api/trending/{time_range}?page=1&page_size=10`
-- 语言分布: `/api/stats/languages`
-- 关键词: 前端从项目描述中提取（或后端新增接口）
+### 5.2 项目详情页 (ProjectDetail.vue)
 
----
-
-### 4.2 项目详情页（ProjectDetail）
-
-**布局结构**
-
+#### 布局结构
 ```
 ┌─────────────────────────────────────────────┐
 │  ← Back to Dashboard                        │
@@ -141,261 +166,466 @@ frontend/src/
 │  owner/repo-name                  [GitHub链接]│
 │  ⭐ 12,345  📈 +1,234  🗓️ 2026-02-06        │
 ├─────────────────────────────────────────────┤
-│  Description: xxxxx                         │
+│  [项目描述]                                  │
 │                                             │
 │  [AI 摘要卡片]                               │
-│  白色背景，轻微圆角，内边距充足               │
-│  标题："AI Analysis"                         │
-│  正文：多段落 AI 生成的摘要                   │
+│  白色背景，轻微圆角                           │
 │                                             │
 │  [技术栈标签]                                │
 │  React • TypeScript • Node.js               │
 │                                             │
-│  [历史趋势图]（可选，如果有历史数据）          │
-│  折线图：Stars 增长趋势（7天/30天）           │
-│                                             │
-│  [开发者信息]（可选）                         │
-│  贡献者列表（头像 + 名称）                    │
+│  [历史趋势图]（可选）                         │
+│  Stars 增长折线图                            │
 └─────────────────────────────────────────────┘
 ```
 
-**设计要点**
-- 单栏居中布局，最大宽度 800px
-- 顶部返回按钮（箭头 + "Back to Dashboard"）
-- AI 摘要是核心，占据主要视觉权重
-- 趋势图仅在有多条历史记录时显示
-- 无侧边栏，专注内容本身
+#### 功能模块
+1. **项目头部**
+   - 返回按钮
+   - 项目名称
+   - GitHub 链接
+   - 关键指标（Stars、增长、日期）
 
-**加载状态**
-- 骨架屏（极简灰色块占位）
-- 无 spinner，避免视觉干扰
+2. **AI 摘要**
+   - 核心内容，占据主要视觉权重
+   - 多段落展示
 
-**数据来源**
-- 项目信息: `/api/trending/{time_range}` 中筛选特定项目
-- 历史趋势: 需后端新增接口或前端从多个时间段数据中聚合
+3. **技术栈**
+   - 标签形式展示
 
----
+4. **历史趋势**
+   - 仅在有历史数据时显示
+   - 折线图展示 Stars 增长
 
-### 4.3 深度分析页（Analytics）
+### 5.3 深度分析页 (Analytics.vue)
 
-**布局结构**
-
+#### 布局结构
 ```
 ┌─────────────────────────────────────────────┐
 │  Analytics                                  │
-├─────────────────────────────────────────────┤
-│  时间范围选择器：Last 7 days ▼               │
+│  时间范围：Last 7 days ▼                     │
 ├─────────────────────────────────────────────┤
 │  [增长趋势图 - 全宽]                         │
-│  折线图：每日新增项目数 + 总 Stars 增长       │
-│                                             │
+│  折线图：每日新增 + 总 Stars                 │
 ├──────────────────────┬──────────────────────┤
-│  [语言分布 - 左半]    │  [分类分布 - 右半]   │
-│  饼图或条形图         │  饼图或条形图         │
+│  [语言分布]          │  [分类分布]          │
 ├──────────────────────┴──────────────────────┤
 │  [关键词趋势 - 全宽]                         │
-│  词云或标签条（显示频次）                     │
 ├─────────────────────────────────────────────┤
 │  [周期对比表格]                              │
-│  本周 vs 上周：新增项目、平均 Stars 等        │
-│  简洁表格，无边框，斑马纹                     │
+│  本周 vs 上周                                │
 └─────────────────────────────────────────────┘
 ```
 
-**图表样式统一**
-- ECharts 配置: 无边框、极简坐标轴、淡色调
-- 主色调: #4A5568（深灰）+ #3B82F6（淡蓝强调色）
-- 背景: 纯白或极淡灰 (#F9FAFB)
-- 字体: 12-14px
+#### 功能模块
+1. **时间范围选择**
+   - 7天/30天/90天
 
-**交互**
-- 时间范围切换: 7天/30天/90天（下拉或 tab）
-- 图表 Hover 显示详细数据
-- 无动画或仅淡入淡出（<300ms）
+2. **增长趋势图**
+   - 每日新增项目数
+   - 总 Stars 增长曲线
 
-**数据来源**
-- 需后端新增聚合接口，或前端从多个 `/api/trending/{time_range}` 请求中聚合
+3. **分布图表**
+   - 语言分布
+   - 分类分布
 
----
+4. **关键词趋势**
+   - 词云或标签条
 
-### 4.4 订阅配置页（Settings）
+5. **周期对比**
+   - 简洁表格，无边框
 
-**布局结构**
+### 5.4 订阅配置页 (Settings.vue)
 
+#### 布局结构
 ```
 ┌─────────────────────────────────────────────┐
 │  Settings                                   │
 ├─────────────────────────────────────────────┤
-│  [订阅配置表单 - 单栏居中，最大宽度 600px]    │
+│  [表单 - 单栏居中，最大宽度 600px]            │
 │                                             │
 │  关键词过滤                                  │
-│  ┌─────────────────────────────────┐       │
-│  │ AI, Machine Learning, Rust      │ [+]   │
-│  └─────────────────────────────────┘       │
-│  标签展示已添加的关键词，可删除               │
+│  [输入框] + [添加按钮]                       │
+│  [已添加标签，可删除]                         │
 │                                             │
 │  最小 Star 数                                │
-│  ┌─────┐                                    │
-│  │ 100 │                                    │
-│  └─────┘                                    │
+│  [数字输入框]                                │
 │                                             │
 │  编程语言                                    │
-│  □ Python  □ JavaScript  □ Go  □ Rust      │
-│  □ TypeScript  □ Java  □ C++               │
+│  [多选框列表]                                │
 │                                             │
 │  时间范围                                    │
-│  ☑ Daily  ☑ Weekly  ☑ Monthly              │
+│  [复选框组]                                  │
 │                                             │
-│  [Save] 按钮 - 右下角，淡蓝色填充            │
+│  [Save 按钮]                                │
 └─────────────────────────────────────────────┘
 ```
 
-**表单特点**
-- 无厚重边框，仅底部细线分隔各字段
-- 输入框: 极简样式，focus 时底部线条加深
-- 复选框: 自定义样式，符合整体美学
-- 保存成功: 顶部淡入提示条，3 秒后消失
-- 无需"取消"按钮（输入即预览）
+#### 功能模块
+1. **关键词管理**
+   - 添加/删除关键词
+   - 标签展示
 
-**数据来源**
-- GET `/api/config/subscription` - 获取当前配置
-- POST `/api/config/subscription` - 保存配置
+2. **Star 阈值**
+   - 数字输入
+
+3. **语言筛选**
+   - 多选框
+
+4. **时间范围**
+   - 复选框组
+
+5. **保存配置**
+   - 发送到后端
+   - 成功提示
 
 ---
 
-## 五、色彩规范
+## 6. 核心组件
 
-```css
-/* 主色调 */
---color-primary: #3B82F6;        /* 淡蓝（强调色） */
---color-text-primary: #1F2937;   /* 深灰（主文本） */
---color-text-secondary: #6B7280; /* 中灰（次要文本） */
---color-text-tertiary: #9CA3AF;  /* 浅灰（辅助文本） */
+### 6.1 ProjectCard.vue - 项目卡片
 
-/* 背景色 */
---color-bg-primary: #FFFFFF;     /* 纯白（主背景） */
---color-bg-secondary: #F9FAFB;   /* 极淡灰（次要背景） */
---color-border: #E5E7EB;         /* 边框/分隔线 */
+**Props**
+```javascript
+{
+  project: {
+    type: Object,
+    required: true,
+    // { name, owner, description, stars, language, url }
+  }
+}
+```
 
-/* 状态色 */
---color-success: #10B981;        /* 绿色（增长） */
---color-danger: #EF4444;         /* 红色（下降） */
+**功能**
+- 显示项目名称、描述（单行截断）、Stars、语言
+- 点击跳转详情页
+- Hover 效果
+
+### 6.2 StatCard.vue - 统计卡片
+
+**Props**
+```javascript
+{
+  label: String,
+  value: [Number, String],
+  trend: Number  // 可选，正数/负数
+}
+```
+
+**功能**
+- 大号数字 + 标签
+- 可选增长箭头（绿色/红色）
+
+### 6.3 ChartContainer.vue - 图表容器
+
+**Props**
+```javascript
+{
+  title: String,
+  loading: Boolean
+}
+```
+
+**功能**
+- 统一图表外框
+- 标题样式
+- Loading 骨架屏
+- 插槽放置 ECharts
+
+### 6.4 TimeRangeSelector.vue - 时间范围选择器
+
+**Props**
+```javascript
+{
+  modelValue: String,
+  options: Array  // ['daily', 'weekly', 'monthly']
+}
+```
+
+**功能**
+- Tab 样式
+- 下划线指示选中
+- emit update:modelValue
+
+### 6.5 TagCloud.vue - 关键词标签云
+
+**Props**
+```javascript
+{
+  keywords: Array  // [{ text, count }]
+}
+```
+
+**功能**
+- 按频次调整字号
+- 极简标签样式
+
+---
+
+## 7. 状态管理 (Pinia)
+
+### 7.1 trending.js
+
+**State**
+```javascript
+{
+  currentTimeRange: 'daily',
+  projects: [],
+  stats: null,
+  languages: [],
+  loading: false,
+  error: null
+}
+```
+
+**Actions**
+```javascript
+async fetchTrending(timeRange, filters) {
+  // 调用 API，更新 projects
+}
+
+async fetchStats() {
+  // 获取统计数据
+}
+
+async fetchLanguageStats() {
+  // 获取语言分布
+}
+```
+
+### 7.2 subscription.js
+
+**State**
+```javascript
+{
+  config: {
+    keywords: [],
+    min_stars: 0,
+    languages: [],
+    time_ranges: ['daily', 'weekly', 'monthly']
+  },
+  loading: false,
+  error: null
+}
+```
+
+**Actions**
+```javascript
+async fetchConfig() {
+  // GET /api/config/subscription
+}
+
+async updateConfig(newConfig) {
+  // POST /api/config/subscription
+}
 ```
 
 ---
 
-## 六、字体规范
+## 8. API 层封装
 
-```css
-/* 字体家族 */
---font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
-               Helvetica, Arial, sans-serif;
+### 8.1 Axios 配置
 
-/* 字号 */
---font-size-xs: 12px;     /* 辅助文本 */
---font-size-sm: 14px;     /* 正文 */
---font-size-base: 16px;   /* 基准 */
---font-size-lg: 18px;     /* 小标题 */
---font-size-xl: 24px;     /* 中标题 */
---font-size-2xl: 32px;    /* 大标题/数字 */
+```javascript
+// api/index.js
+import axios from 'axios'
 
-/* 字重 */
---font-weight-normal: 400;
---font-weight-medium: 500;
---font-weight-semibold: 600;
---font-weight-bold: 700;
+const apiClient = axios.create({
+  baseURL: 'http://localhost:8000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 请求拦截器
+apiClient.interceptors.request.use(config => {
+  // 可添加 loading 状态
+  return config
+})
+
+// 响应拦截器
+apiClient.interceptors.response.use(
+  response => response.data,
+  error => {
+    // 统一错误处理
+    console.error('API Error:', error)
+    return Promise.reject(error)
+  }
+)
+```
+
+### 8.2 API 方法
+
+```javascript
+export default {
+  // 获取 Trending 项目列表
+  getTrending(timeRange, params = {}) {
+    return apiClient.get(`/api/trending/${timeRange}`, { params })
+  },
+
+  // 获取统计概览
+  getStatsOverview() {
+    return apiClient.get('/api/stats/overview')
+  },
+
+  // 获取语言分布
+  getLanguageStats() {
+    return apiClient.get('/api/stats/languages')
+  },
+
+  // 获取订阅配置
+  getSubscriptionConfig() {
+    return apiClient.get('/api/config/subscription')
+  },
+
+  // 更新订阅配置
+  updateSubscriptionConfig(data) {
+    return apiClient.post('/api/config/subscription', data)
+  },
+
+  // 健康检查
+  healthCheck() {
+    return apiClient.get('/api/health')
+  }
+}
 ```
 
 ---
 
-## 七、实现优先级
+## 9. 样式系统
 
-### P0（核心功能，必须实现）
-1. ✅ 项目初始化（Vite + Vue 3 + Router + Pinia）
-2. ✅ API 层封装（Axios + 基础错误处理）
-3. ✅ 首页仪表盘（核心指标 + 项目列表 + 基础图表）
-4. ✅ 时间范围切换（daily/weekly/monthly）
-5. ✅ 项目详情页（基础信息 + AI 摘要）
+### 9.1 CSS 变量 (variables.css)
 
-### P1（重要功能，尽快实现）
-1. ⬜ 深度分析页（多图表展示）
-2. ⬜ 订阅配置页（表单交互）
-3. ⬜ 响应式布局（移动端适配）
-4. ⬜ 加载状态优化（骨架屏）
+```css
+:root {
+  /* 色彩 */
+  --color-text-primary: #1a202c;
+  --color-text-secondary: #718096;
+  --color-text-tertiary: #a0aec0;
+  --color-accent: #3b82f6;
+  --color-background: #ffffff;
+  --color-background-alt: #f7fafc;
+  --color-border: #e2e8f0;
 
-### P2（锦上添花，可后续迭代）
-1. ⬜ 项目详情页历史趋势图
-2. ⬜ 暗黑模式切换
-3. ⬜ 数据导出功能
-4. ⬜ 离线缓存（PWA）
+  /* 间距 */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
 
----
+  /* 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', Monaco, monospace;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
 
-## 八、技术实现注意事项
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
 
-### 8.1 API 调用
-- 使用 Axios 拦截器统一处理错误
-- 请求失败时显示用户友好的错误提示
-- 超时设置: 10 秒
+  /* 阴影 */
+  --shadow-subtle: 0 1px 3px rgba(0,0,0,0.05);
+}
+```
 
-### 8.2 状态管理
-- Pinia store 按功能模块划分（trending, stats, config）
-- 使用 `storeToRefs` 保持响应式
-- 缓存策略: 5 分钟内相同请求返回缓存数据
+### 9.2 设计原则
 
-### 8.3 性能优化
-- 路由懒加载（`() => import('./views/...')`）
-- ECharts 按需引入（tree-shaking）
-- 图片使用 WebP 格式（兜底 PNG）
-- 避免不必要的重渲染（`computed`, `watch` 合理使用）
+- **无彩色为主**：黑/白/灰
+- **单一强调色**：淡蓝 (#3b82f6)
+- **大量留白**：组件间距充足
+- **极简动画**：仅 opacity 和 transform，200ms
+- **无厚重边框**：细线分隔或无边框
 
-### 8.4 代码规范
-- 使用 Composition API（script setup）
-- 组件命名: PascalCase
-- 文件命名: camelCase
-- CSS 使用 scoped 样式
-- 遵循项目 CLAUDE.md 中的代码风格指南
+### 9.3 响应式断点
 
----
+```css
+/* Mobile */
+@media (max-width: 767px) {
+  /* 单栏布局 */
+}
 
-## 九、后端接口依赖
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 部分双栏 */
+}
 
-### 现有接口
-- ✅ `GET /api/trending/{time_range}` - 获取 Trending 列表
-- ✅ `GET /api/stats/overview` - 统计概览
-- ✅ `GET /api/stats/languages` - 语言分布
-- ✅ `GET /api/config/subscription` - 获取订阅配置
-- ✅ `POST /api/config/subscription` - 更新订阅配置
-
-### 可能需要新增的接口
-- ⚠️ `GET /api/trending/project/{owner}/{name}` - 单个项目详情（含历史趋势）
-- ⚠️ `GET /api/analytics/growth-trend` - 增长趋势数据（用于分析页）
-- ⚠️ `GET /api/analytics/keywords` - 关键词统计
-
-**备注**: 如果后端暂时无法新增接口，前端可通过聚合现有接口数据实现类似功能。
-
----
-
-## 十、验收标准
-
-### 功能验收
-- [ ] 首页能正确展示 daily/weekly/monthly 三种时间范围的数据
-- [ ] 点击项目卡片能跳转到详情页并显示 AI 摘要
-- [ ] 深度分析页的图表能正确渲染
-- [ ] 订阅配置能保存并在刷新后保持
-- [ ] 移动端（375px 宽度）布局不错乱
-
-### 性能验收
-- [ ] 首屏加载时间 < 2 秒（Fast 3G 网络）
-- [ ] Lighthouse 性能评分 > 90
-- [ ] 无明显的布局抖动（CLS < 0.1）
-
-### 体验验收
-- [ ] 符合 Anthropic 极简设计风格
-- [ ] 无不必要的动画和视觉噪音
-- [ ] 错误提示清晰友好
-- [ ] 键盘导航可用（Tab 键切换）
+/* Desktop */
+@media (min-width: 1024px) {
+  /* 完整双栏 */
+}
+```
 
 ---
 
-**设计方案结束**
+## 10. 实现优先级
+
+### Phase 1: 基础架构
+1. 路由配置
+2. Pinia stores
+3. API 层封装
+4. 样式系统（CSS 变量 + 全局样式）
+
+### Phase 2: 核心组件
+1. ProjectCard
+2. StatCard
+3. TimeRangeSelector
+
+### Phase 3: 首页实现
+1. Dashboard 页面布局
+2. 集成 API 数据
+3. 左侧项目列表
+4. 右侧可视化（简单版，先用静态数据）
+
+### Phase 4: 详情页
+1. ProjectDetail 基础布局
+2. 路由参数解析
+3. AI 摘要展示
+
+### Phase 5: 其他页面
+1. Analytics 页面
+2. Settings 页面
+
+### Phase 6: 优化
+1. 响应式适配
+2. Loading 状态
+3. 错误处理
+4. 性能优化
+
+---
+
+## 11. 技术约束
+
+### 浏览器兼容
+- 现代浏览器（Chrome, Firefox, Safari, Edge）
+- 不支持 IE
+
+### 性能目标
+- 首屏加载 < 2s
+- 路由切换 < 300ms
+- API 响应展示实时反馈
+
+### 安全考虑
+- XSS 防护：Vue 自动转义
+- CORS：后端已配置
+- 无敏感信息存储在前端
+
+---
+
+## 12. 后续优化方向
+
+1. **服务端渲染 (SSR)**：Nuxt.js 改造，提升 SEO
+2. **PWA 支持**：离线访问，推送通知
+3. **暗色模式**：主题切换
+4. **国际化 (i18n)**：多语言支持
+5. **测试覆盖**：单元测试 + E2E 测试
+
+---
+
+**设计完成日期**: 2026-02-06
+**预计实现周期**: 2-3 天
