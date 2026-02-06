@@ -1,5 +1,6 @@
 # AGENT-IGNORE-FILE
 CLAUDE.md
+.claude
 
 # Configuration (contains secrets)
 config/config.yaml
@@ -55,3 +56,6 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Git worktrees
+.worktrees/
