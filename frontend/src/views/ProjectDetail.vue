@@ -97,10 +97,10 @@ const route = useRoute()
 const router = useRouter()
 const store = useTrendingStore()
 
-const owner = route.params.owner
-const name = route.params.name
+const owner = computed(() => route.params.owner)
+const name = computed(() => route.params.name)
 
-const project = computed(() => store.getProject(owner, name))
+const project = computed(() => store.getProject(owner.value, name.value))
 const loading = computed(() => store.loading)
 const error = computed(() => store.error)
 

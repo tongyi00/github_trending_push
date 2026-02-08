@@ -72,7 +72,24 @@ jobs:
         "
 
     - name: Run Daily Push
-      run: python main.py --daily
+      run: |
+        # Start API server in background with scheduler
+        python start_api.py &
+        API_PID=$!
+
+        # Wait for server to initialize
+        sleep 5
+
+        # Trigger daily task via API
+        curl -X POST http://localhost:8000/api/tasks/run \
+          -H "Content-Type: application/json" \
+          -d '{"task_type": "daily"}'
+
+        # Wait for task to complete (adjust timeout as needed)
+        sleep 60
+
+        # Stop server
+        kill $API_PID
 
     - name: Commit and Push History
       run: |

@@ -2,29 +2,17 @@
 
 [🇺🇸 English](README.md) | [🇨🇳 简体中文](README_CN.md)
 
-A Python tool that automatically scrapes GitHub Trending repositories, generates summaries using AI, and pushes them via email on a schedule.
+Automatically scrape GitHub Trending repositories, generate AI-powered summaries, and deliver them via email and RESTful API.
 
 ## ✨ Features
 
-- **Multi-dimension Scraping**: Supports scraping trending repositories Daily, Weekly, and Monthly.
-- **AI-Powered Summaries**:
-  - Integrates multiple AI models (DeepSeek, NVIDIA, GLM, Moonshot/Kimi).
-  - Automatically generates concise summaries (Highlights, Core Features, Use Cases).
-  - Supports multi-model automatic fallback for high availability.
-- **Beautiful Email Push**:
-  - Uses responsive HTML email templates.
-  - Clearly displays project names, star growth, programming languages, and AI summaries.
-- **Smart Deduplication**:
-  - Automatically records history to prevent duplicate recommendations.
-- **Robust Design**:
-  - Automatic retry mechanism for network requests.
-  - Comprehensive logging with Loguru.
-  - Daemon mode support for long-running execution.
-
-## 🛠️ Requirements
-
-- Python 3.10+ (Python 3.14 recommended)
-- Dependencies: See `requirements.txt`
+- **Multi-dimension Scraping**: Daily, Weekly, Monthly trending repositories
+- **AI-Powered Summaries**: Multiple AI models (DeepSeek, NVIDIA, GLM, Kimi) with automatic fallback
+- **RESTful API**: FastAPI backend with 15+ endpoints and Swagger UI
+- **Vue 3 Dashboard**: Modern responsive frontend with real-time data visualization
+- **Email Push**: Beautiful HTML templates with responsive design
+- **Scheduled Tasks**: Automatic daily/weekly/monthly execution
+- **Health Monitoring**: 5 subsystems health check (Database, AI, Email, GitHub API, System)
 
 ## 🚀 Quick Start
 
@@ -36,90 +24,104 @@ pip install -r requirements.txt
 
 ### 2. Configuration
 
-Copy the example configuration file and modify it:
-
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-Edit `config/config.yaml` and fill in the key information:
-- **GitHub Token** (Optional, recommended for higher API rate limits)
-- **AI Model API Key** (Supports DeepSeek, NVIDIA, etc. At least one is required)
-- **Email SMTP Settings** (For sending emails, App Password is recommended)
+Edit `config/config.yaml` and fill in:
+- **AI Model API Key** (at least one: DeepSeek/NVIDIA/GLM/Kimi)
+- **Email SMTP Settings** (sender, password, recipients)
+- **GitHub Token** (optional, for higher rate limits)
 
-### 3. Verify Configuration
-
-Run the following command to check if the configuration is correct:
+### 3. Start Server
 
 ```bash
-python main.py --validate
+python start_api.py
 ```
 
-### 4. Test Run
+- Backend API: http://localhost:8000
+- Swagger Docs: http://localhost:8000/api/docs
 
-Execute a one-time daily scraping task for testing:
+## 🎨 Frontend Setup (Optional)
 
 ```bash
-python main.py --test
+cd frontend
+npm install
+npm run dev
 ```
 
-## 📖 Usage Guide
+Frontend will be available at http://localhost:5173
 
-### Command Line Arguments
+## 📖 API Endpoints
 
-```bash
-python main.py [OPTIONS]
+**Trending**
+- `GET /api/trending/{time_range}` - Get trending repositories (daily/weekly/monthly)
 
-Options:
-  --validate       Validate configuration format
-  --test           Test run (execute one daily task)
-  --daily          Execute one daily task
-  --weekly         Execute one weekly task
-  --monthly        Execute one monthly task
-  --daemon, -d     Start daemon (run periodically in background)
-  --config PATH    Specify configuration file path (default: config/config.yaml)
-```
+**Statistics**
+- `GET /api/stats/overview` - Statistics overview
+- `GET /api/stats/languages` - Language distribution
+- `GET /api/stats/history` - Historical statistics
+- `GET /api/stats/comparison` - Week-over-week comparison
 
-### Scheduling Strategy
+**AI Analysis**
+- `GET /api/analysis/{owner}/{repo}` - Detailed AI analysis report
+- `GET /api/analysis/{owner}/{repo}/stream` - Streaming AI analysis (SSE)
 
-- **Daily Push**: Every day at 08:00 (Asia/Shanghai)
-- **Weekly Push**: Every Sunday at 22:00
-- **Monthly Push**: The last day of every month at 22:00
+**Settings**
+- `GET /api/settings` - Get all settings
+- `PUT /api/settings` - Update settings
+- `PUT /api/scheduler` - Control scheduler (start/stop)
 
-*Note: Schedule times can be customized in `config.yaml`.*
+**Tasks**
+- `POST /api/tasks/run` - Manually trigger task
+- `GET /api/tasks/status/{task_id}` - Query task status
+
+**System**
+- `GET /api/health` - Health check (5 subsystems)
 
 ## 📂 Project Structure
 
 ```
 github_trending_push/
-├── config/
-│   ├── config.yaml          # Configuration file
-│   └── config.example.yaml  # Configuration template
+├── config/                 # Configuration files
 ├── src/
-│   ├── ai_summarizer.py     # AI summary generation module
-│   ├── config_validator.py  # Configuration validation module
-│   ├── logging_config.py    # Logging configuration module
-│   ├── mailer.py            # Email sending module
-│   ├── scheduler.py         # Task scheduler
-│   └── scraper_treding.py   # GitHub scraper module
-├── templates/
-│   └── email_template.html  # Email HTML template
-├── data/
-│   └── trending.json        # Historical data (for deduplication)
-├── logs/                    # Runtime logs
-├── main.py                  # Main entry point
-└── requirements.txt         # Project dependencies
+│   ├── core/              # Database models and services
+│   ├── collectors/        # GitHub scraping
+│   ├── analyzers/         # AI analysis and classification
+│   ├── outputs/           # Report generation and email
+│   ├── infrastructure/    # Logging, scheduling, monitoring
+│   └── web/               # FastAPI routes and schemas
+├── frontend/              # Vue 3 dashboard
+├── templates/             # HTML templates
+├── scripts/               # Utility scripts
+└── start_api.py           # Main entry point
 ```
 
-## 📝 Development Notes
+## 🛠️ Tech Stack
 
-- **Logs**: Default saved in `logs/trending.log`, with automatic rotation (10MB/file, kept for 7 days).
-- **Data**: Scraped raw data is saved in JSON format in `data/trending.json`.
+**Backend**: FastAPI, SQLAlchemy, Loguru, BeautifulSoup4, httpx
 
-## 🤝 Contribution
+**Frontend**: Vue 3, Vite, Element Plus, ECharts, Pinia
 
-Issues and Pull Requests are welcome!
+**AI Models**: DeepSeek, NVIDIA, GLM, Kimi (Moonshot)
+
+## 🚨 Troubleshooting
+
+**Email sending fails**
+- Use SMTP app password, not account password
+- Gmail: https://myaccount.google.com/apppasswords
+
+**Database locked error**
+- Ensure only one instance is running
+
+**AI API quota exceeded**
+- Check API key validity
+- Configure multi-model fallback in config
 
 ## 📄 License
 
 MIT License
+
+---
+
+**⭐ If you find this project helpful, please give it a star!**

@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed } from 'vue';
 import * as echarts from 'echarts/core';
 import { PieChart, BarChart } from 'echarts/charts';
 import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { useChart } from '../composables/useChart';
+import { CLAUDE_COLORS, getColorByIndex, CHART_TOOLTIP_STYLE } from '../utils/theme';
 
 echarts.use([PieChart, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
 
@@ -23,53 +25,62 @@ const props = defineProps({
 });
 
 const chartRef = ref(null);
-let chartInstance = null;
-
-const initChart = () => {
-  if (!chartRef.value || props.loading) return;
-
-  if (chartInstance) {
-    chartInstance.dispose();
-  }
-
-  chartInstance = echarts.init(chartRef.value);
-
-  const option = props.type === 'pie' ? getPieOption() : getBarOption();
-  chartInstance.setOption(option);
-};
+const loadingRef = computed(() => props.loading);
 
 const getPieOption = () => ({
+  color: CLAUDE_COLORS,
   tooltip: {
     trigger: 'item',
-    formatter: '{b}: {c} ({d}%)'
+    formatter: '{b}: {c} ({d}%)',
+    ...CHART_TOOLTIP_STYLE
   },
   legend: {
     orient: 'vertical',
-    left: 'right',
-    top: 'center',
+    right: '1%',
+    top: '0%',
+    itemGap: 14,
+    icon: 'circle',
     textStyle: {
-      fontSize: 12
+      fontSize: 14,
+      color: 'inherit'
     }
+  },
+  grid: {
+    top: 0,
+    bottom: 20,
+    containLabel: true
   },
   series: [
     {
       name: 'Languages',
       type: 'pie',
-      radius: ['40%', '70%'],
-      avoidLabelOverlap: true,
+      radius: ['40%', '60%'],
+      center: ['40%', '33%'],
+      avoidLabelOverlap: false,
       itemStyle: {
-        borderRadius: 8,
+        borderRadius: 6,
         borderColor: '#fff',
         borderWidth: 2
       },
       label: {
+        show: false,
+        position: 'center'
+      },
+      labelLine: {
         show: false
       },
       emphasis: {
         label: {
           show: true,
-          fontSize: 14,
-          fontWeight: 'bold'
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: 'inherit',
+          formatter: '{b}\n{d}%'
+        },
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.1)'
         }
       },
       data: props.data.map((item, index) => ({
@@ -84,30 +95,45 @@ const getPieOption = () => ({
 });
 
 const getBarOption = () => ({
+  color: CLAUDE_COLORS,
   tooltip: {
     trigger: 'axis',
     axisPointer: {
       type: 'shadow'
-    }
+    },
+    ...CHART_TOOLTIP_STYLE
   },
   grid: {
-    left: '10%',
+    left: '5%',
     right: '5%',
-    bottom: '10%',
-    top: '5%',
+    bottom: '5%',
+    top: '10%',
     containLabel: true
   },
   xAxis: {
     type: 'value',
     axisLabel: {
-      formatter: '{value}%'
+      formatter: '{value}%',
+      color: '#6B6B6B'
+    },
+    splitLine: {
+      lineStyle: {
+        color: '#E8E6DC',
+        type: 'dashed'
+      }
     }
   },
   yAxis: {
     type: 'category',
     data: props.data.map(item => item.language || item.name).reverse(),
     axisLabel: {
-      fontSize: 12
+      fontSize: 12,
+      color: '#6B6B6B'
+    },
+    axisLine: {
+      lineStyle: {
+        color: '#E8E6DC'
+      }
     }
   },
   series: [
@@ -120,29 +146,16 @@ const getBarOption = () => ({
           borderRadius: [0, 4, 4, 0]
         }
       })).reverse(),
-      barWidth: '60%'
+      barWidth: '50%'
     }
   ]
 });
 
-const getColorByIndex = (index) => {
-  const colors = [
-    '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
-    '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#5470c6'
-  ];
-  return colors[index % colors.length];
-};
-
-onMounted(() => {
-  initChart();
-  window.addEventListener('resize', () => {
-    chartInstance?.resize();
-  });
+const chartOption = computed(() => {
+  return props.type === 'pie' ? getPieOption() : getBarOption();
 });
 
-watch(() => [props.data, props.loading], () => {
-  initChart();
-}, { deep: true });
+useChart(chartRef, chartOption, loadingRef);
 </script>
 
 <template>
@@ -154,5 +167,10 @@ watch(() => [props.data, props.loading], () => {
   width: 100%;
   height: 100%;
   min-height: 300px;
+}
+
+/* 深色模式下的图表样式适配 */
+:global(.dark) .chart-container {
+  /* ECharts 内部元素颜色通过 JS 控制，这里主要处理容器 */
 }
 </style>

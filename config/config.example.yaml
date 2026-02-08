@@ -42,8 +42,15 @@ email:
   smtp_server: "smtp.gmail.com"
   smtp_port: 587
   use_ssl: true
-  sender: "tmj20000509@gmail.com"
+  sender: "your_email@example.com"
+
+  # SMTP Password (choose ONE method, priority: env var > encrypted > plaintext):
+  # 1. Environment variable (RECOMMENDED for production): Set SMTP_PASSWORD env var
+  # 2. Encrypted storage: Use password_encrypted field (encrypt with: python -m src.infrastructure.security)
+  # 3. Plaintext (DEVELOPMENT ONLY): Use password field below
   password: "your_smtp_authorization_code"  # SMTP authorization code, NOT login password
+  # password_encrypted: "gAAAAABl..."  # Use encrypted password instead (production recommended)
+
   recipients:
     - "recipient1@example.com"
     - "recipient2@example.com"
@@ -68,6 +75,12 @@ logging:
   retention: "7 days"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   backup_count: 5
+
+filters:
+  min_stars: 100  # Minimum total stars required for a repository
+  min_stars_daily: 50  # Minimum daily new stars
+  min_stars_weekly: 200  # Minimum weekly new stars
+  min_stars_monthly: 500  # Minimum monthly new stars
 
 prompt_template: |
   你是GitHub项目分析专家，请用中文为以下项目生成准确的总结：
@@ -99,3 +112,101 @@ prompt_template: |
   1. 语言通俗易懂，避免过度技术化
   2. 突出差异化和创新点
   3. 总长度控制在150字内
+
+detailed_prompt_template: |
+  你是资深技术架构师，请对以下 GitHub 项目进行深度技术分析。
+
+  **项目信息：**
+  - 名称: {name}
+  - 描述: {description}
+  - Stars: {stars} | Forks: {forks}
+  - 主要语言: {language}
+  - README 内容摘要: {readme_content}
+  - 主要依赖: {dependencies}
+
+  **请严格按以下 JSON 格式输出分析报告（不要添加任何额外文字）：**
+
+  ```json
+  {{
+    "executive_summary": "用2-3句话概括项目的核心价值、技术定位和主要用途",
+    "scores": {{
+      "architecture": {{
+        "score": 8.5,
+        "reason": "基于代码结构、模块化程度、设计模式的评分依据"
+      }},
+      "code_quality": {{
+        "score": 7.0,
+        "reason": "基于代码规范、测试覆盖、错误处理的评分依据"
+      }},
+      "documentation": {{
+        "score": 9.0,
+        "reason": "基于 README 完整度、API 文档、示例代码的评分依据"
+      }},
+      "community": {{
+        "score": 8.0,
+        "reason": "基于 Star/Fork 增长、Issue 响应、贡献者数量的评分依据"
+      }},
+      "innovation": {{
+        "score": 7.5,
+        "reason": "基于技术创新性、解决问题的独特性的评分依据"
+      }}
+    }},
+    "key_features": [
+      "核心功能1",
+      "核心功能2",
+      "核心功能3",
+      "核心功能4"
+    ],
+    "tech_stack": [
+      "主要技术/框架1",
+      "主要技术/框架2",
+      "主要技术/框架3"
+    ],
+    "use_cases": [
+      "适用场景1",
+      "适用场景2",
+      "适用场景3"
+    ],
+    "limitations": [
+      "已知局限或注意事项1",
+      "已知局限或注意事项2"
+    ],
+    "learning_resources": [
+      "官方文档或教程链接描述1",
+      "推荐学习资源2"
+    ],
+    "integration_examples": [
+      {{
+        "scenario": "典型集成场景名称（如：与 Web 框架集成）",
+        "code": "3-5行核心代码示例"
+      }},
+      {{
+        "scenario": "另一个常见使用场景",
+        "code": "对应的代码示例"
+      }}
+    ],
+    "faq": [
+      {{
+        "question": "开发者最可能遇到的问题1",
+        "answer": "简洁的解决方案（1-2句话）"
+      }},
+      {{
+        "question": "常见配置或使用问题2",
+        "answer": "对应的解答"
+      }},
+      {{
+        "question": "性能或兼容性相关问题3",
+        "answer": "对应的解答"
+      }}
+    ]
+  }}
+  ```
+
+  **评分标准（1-10分）：**
+  - 9-10: 卓越，业界标杆
+  - 7-8: 优秀，超出预期
+  - 5-6: 良好，符合标准
+  - 3-4: 一般，有改进空间
+  - 1-2: 较差，存在明显问题
+
+  请确保评分客观公正，依据具体可观察的指标。

@@ -5,8 +5,8 @@
 import sys
 import yaml
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
 from loguru import logger
+from typing import List, Tuple, Dict, Any
 
 
 class ConfigValidator:
@@ -57,6 +57,7 @@ class ConfigValidator:
         self._validate_email()
         self._validate_scheduler()
         self._validate_logging()
+        self._validate_filters()
 
         return len(self.errors) == 0, self.errors, self.warnings
 
@@ -67,7 +68,7 @@ class ConfigValidator:
 
         if not token:
             self.warnings.append("GitHub token not configured - API rate limit will be 60 requests/hour (5000/hour with token)")
-        elif token.startswith('ghp_xxx') or token.startswith('YOUR_'):
+        elif token == 'ghp_xxxxxxxxxxxxxxxxxxxx' or token == 'YOUR_GITHUB_TOKEN':
             self.errors.append("GitHub token not properly configured (still using example value)")
 
     def _validate_ai_models(self):
@@ -84,7 +85,16 @@ class ConfigValidator:
             model_config = ai_config.get(model_name, {})
             api_key = model_config.get('api_key', '')
 
-            if api_key and not api_key.startswith('YOUR_') and not api_key.startswith('sk-xxx') and not api_key.startswith('nvapi-xxx'):
+            # Check if key is one of the known placeholders
+            placeholders = [
+                'sk-xxxxxxxxxxxxxxxx',
+                'nvapi-xxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx',
+                'YOUR_API_KEY',
+                'YOUR_DEEPSEEK_API_KEY'
+            ]
+
+            if api_key and api_key not in placeholders:
                 configured_models.append(model_name)
 
         if not configured_models:
@@ -101,10 +111,10 @@ class ConfigValidator:
         password = email.get('password', '')
         recipients = email.get('recipients', [])
 
-        if not sender or sender.startswith('your_'):
+        if not sender or sender == 'your_email@example.com' or sender.startswith('your_'):
             self.errors.append("Email sender not configured")
 
-        if not password or password.startswith('your_'):
+        if not password or password == 'your_smtp_authorization_code':
             self.errors.append("Email password (SMTP authorization code) not configured")
             self.warnings.append("Note: Use SMTP authorization code, not login password")
 
@@ -140,6 +150,26 @@ class ConfigValidator:
 
         if not logging_config:
             self.warnings.append("Logging configuration not found, using defaults")
+
+    def _validate_filters(self):
+        """验证过滤器配置"""
+        filters = self.config.get('filters', {})
+
+        if not filters:
+            self.warnings.append("Filters configuration not found, no star filtering will be applied")
+            return
+
+        min_stars = filters.get('min_stars', 0)
+        min_stars_daily = filters.get('min_stars_daily', 0)
+        min_stars_weekly = filters.get('min_stars_weekly', 0)
+        min_stars_monthly = filters.get('min_stars_monthly', 0)
+
+        for key, value in [('min_stars', min_stars), ('min_stars_daily', min_stars_daily), ('min_stars_weekly', min_stars_weekly), ('min_stars_monthly', min_stars_monthly)]:
+            if not isinstance(value, int) or value < 0:
+                self.errors.append(f"Invalid {key}: must be a non-negative integer")
+
+        if filters:
+            self.warnings.append(f"Star filtering enabled - min_stars: {min_stars}, daily: {min_stars_daily}, weekly: {min_stars_weekly}, monthly: {min_stars_monthly}")
 
     def print_results(self):
         """打印验证结果"""
@@ -218,11 +248,3 @@ def load_config(config_path: str = "config/config.yaml") -> Dict[str, Any]:
             logger.warning(warning)
 
     return validator.get_config()
-
-
-if __name__ == "__main__":
-    import colorama
-    colorama.init(autoreset=True)
-
-    success = validate_config()
-    sys.exit(0 if success else 1)

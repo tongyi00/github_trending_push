@@ -2,29 +2,17 @@
 
 [🇺🇸 English](README.md) | [🇨🇳 简体中文](README_CN.md)
 
-一个自动抓取 GitHub Trending 热门项目、利用 AI 生成中文摘要并通过邮件定时推送的 Python 工具。
+自动抓取 GitHub Trending 热门项目，利用 AI 生成智能摘要，并通过邮件和 RESTful API 推送。
 
 ## ✨ 功能特点
 
-- **多维度抓取**：支持每日 (Daily)、每周 (Weekly)、每月 (Monthly) 的热门项目抓取。
-- **AI 智能摘要**：
-  - 集成多种 AI 模型（DeepSeek, NVIDIA, GLM, Moonshot/Kimi）。
-  - 自动生成精简的中文摘要（亮点、核心功能、适用人群）。
-  - 支持多模型自动降级（Fallback），确保服务高可用。
-- **精美邮件推送**：
-  - 使用响应式 HTML 邮件模板。
-  - 清晰展示项目名称、Stars 增长、编程语言及 AI 摘要。
-- **智能去重**：
-  - 自动记录历史推送项目，防止重复推荐。
-- **健壮性设计**：
-  - 网络请求自动重试机制。
-  - 完善的日志记录 (Loguru)。
-  - 守护进程模式，支持长期运行。
-
-## 🛠️ 环境要求
-
-- Python 3.10+ (推荐 Python 3.14)
-- 依赖库：见 `requirements.txt`
+- **多维度抓取**：支持每日、每周、每月热门项目抓取
+- **AI 智能摘要**：集成多种 AI 模型（DeepSeek、NVIDIA、GLM、Kimi），支持自动降级
+- **RESTful API**：FastAPI 后端，15+ 个端点，自带 Swagger UI
+- **Vue 3 仪表盘**：现代化响应式前端，实时数据可视化
+- **邮件推送**：精美的 HTML 邮件模板，响应式设计
+- **定时任务**：自动执行每日/每周/每月推送
+- **健康监控**：5 个子系统健康检查（数据库、AI、邮件、GitHub API、系统）
 
 ## 🚀 快速开始
 
@@ -36,90 +24,104 @@ pip install -r requirements.txt
 
 ### 2. 配置文件
 
-复制示例配置文件并修改：
-
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-编辑 `config/config.yaml`，填入以下关键信息：
-- **GitHub Token** (可选，建议配置以提高 API 限额)
-- **AI 模型 API Key** (支持 DeepSeek, NVIDIA 等，至少配置一个)
-- **邮箱 SMTP 设置** (用于发送邮件，推荐使用应用专用密码)
+编辑 `config/config.yaml`，填入：
+- **AI 模型 API Key**（至少配置一个：DeepSeek/NVIDIA/GLM/Kimi）
+- **邮箱 SMTP 设置**（发件人、密码、收件人列表）
+- **GitHub Token**（可选，提高 API 限额）
 
-### 3. 验证配置
-
-运行以下命令检查配置是否正确：
+### 3. 启动服务
 
 ```bash
-python main.py --validate
+python start_api.py
 ```
 
-### 4. 测试运行
+- 后端 API：http://localhost:8000
+- Swagger 文档：http://localhost:8000/api/docs
 
-执行一次每日抓取任务进行测试：
+## 🎨 前端设置（可选）
 
 ```bash
-python main.py --test
+cd frontend
+npm install
+npm run dev
 ```
 
-## 📖 使用指南
+前端将在 http://localhost:5173 可用
 
-### 命令行参数
+## 📖 API 端点
 
-```bash
-python main.py [OPTIONS]
+**趋势数据**
+- `GET /api/trending/{time_range}` - 获取趋势项目（daily/weekly/monthly）
 
-选项:
-  --validate       验证配置文件格式
-  --test           测试运行（执行一次每日任务）
-  --daily          执行一次每日任务
-  --weekly         执行一次每周任务
-  --monthly        执行一次每月任务
-  --daemon, -d     启动守护进程（后台定时运行）
-  --config PATH    指定配置文件路径 (默认: config/config.yaml)
-```
+**统计分析**
+- `GET /api/stats/overview` - 统计概览
+- `GET /api/stats/languages` - 编程语言分布
+- `GET /api/stats/history` - 历史统计数据
+- `GET /api/stats/comparison` - 周对比数据
 
-### 定时任务策略
+**AI 分析**
+- `GET /api/analysis/{owner}/{repo}` - 详细 AI 分析报告
+- `GET /api/analysis/{owner}/{repo}/stream` - 流式 AI 分析（SSE）
 
-- **每日推送**: 每天 08:00 (北京时间)
-- **每周推送**: 每周日 22:00
-- **每月推送**: 每月最后一天 22:00
+**设置管理**
+- `GET /api/settings` - 获取所有设置
+- `PUT /api/settings` - 更新设置
+- `PUT /api/scheduler` - 控制调度器（启动/停止）
 
-*注：时间可在 `config.yaml` 中自定义修改。*
+**任务管理**
+- `POST /api/tasks/run` - 手动触发任务
+- `GET /api/tasks/status/{task_id}` - 查询任务状态
+
+**系统监控**
+- `GET /api/health` - 健康检查（5个子系统）
 
 ## 📂 项目结构
 
 ```
 github_trending_push/
-├── config/
-│   ├── config.yaml          # 配置文件
-│   └── config.example.yaml  # 配置模板
+├── config/                 # 配置文件
 ├── src/
-│   ├── ai_summarizer.py     # AI 摘要生成模块
-│   ├── config_validator.py  # 配置验证模块
-│   ├── logging_config.py    # 日志配置模块
-│   ├── mailer.py            # 邮件发送模块
-│   ├── scheduler.py         # 定时任务调度器
-│   └── scraper_treding.py   # GitHub 爬虫模块
-├── templates/
-│   └── email_template.html  # 邮件 HTML 模板
-├── data/
-│   └── trending.json        # 历史数据（用于去重）
-├── logs/                    # 运行日志
-├── main.py                  # 程序主入口
-└── requirements.txt         # 项目依赖
+│   ├── core/              # 数据库模型和服务
+│   ├── collectors/        # GitHub 爬虫
+│   ├── analyzers/         # AI 分析和分类
+│   ├── outputs/           # 报告生成和邮件
+│   ├── infrastructure/    # 日志、调度、监控
+│   └── web/               # FastAPI 路由和模型
+├── frontend/              # Vue 3 仪表盘
+├── templates/             # HTML 模板
+├── scripts/               # 工具脚本
+└── start_api.py           # 主入口
 ```
 
-## 📝 开发说明
+## 🛠️ 技术栈
 
-- **日志**：默认保存在 `logs/trending.log`，会自动轮转（10MB/文件，保留 7 天）。
-- **数据**：抓取的原始数据会以 JSON 格式保存在 `data/trending.json` 中。
+**后端**：FastAPI、SQLAlchemy、Loguru、BeautifulSoup4、httpx
 
-## 🤝 贡献
+**前端**：Vue 3、Vite、Element Plus、ECharts、Pinia
 
-欢迎提交 Issue 和 Pull Request！
+**AI 模型**：DeepSeek、NVIDIA、GLM、Kimi (Moonshot)
+
+## 🚨 故障排查
+
+**邮件发送失败**
+- 使用 SMTP 应用专用密码，而非账户密码
+- Gmail：https://myaccount.google.com/apppasswords
+
+**数据库锁定错误**
+- 确保只有一个实例在运行
+
+**AI API 配额超限**
+- 检查 API 密钥有效性
+- 在配置中启用多模型降级
 
 ## 📄 许可证
 
 MIT License
+
+---
+
+**⭐ 如果这个项目对您有帮助，请给个 Star！**

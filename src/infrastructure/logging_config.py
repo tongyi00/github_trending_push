@@ -3,10 +3,13 @@
 统一管理Loguru日志配置
 """
 
+import os
 import sys
 from pathlib import Path
 from loguru import logger
 from typing import Dict, Any
+
+from .security import Sanitizer
 
 
 def setup_logging(config: Dict[str, Any]):
@@ -35,8 +38,14 @@ def setup_logging(config: Dict[str, Any]):
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
+        is_production = os.getenv("ENVIRONMENT", "").lower() == "production"
+
+        def sanitize_filter(record):
+            record["message"] = Sanitizer.sanitize(record["message"])
+            return True
+
         logger.add(log_file, level=level, rotation=rotation, retention=retention, encoding='utf-8', format=log_format,
-                   enqueue=True, backtrace=True, diagnose=True)
+                   enqueue=True, backtrace=not is_production, diagnose=not is_production, filter=sanitize_filter)
     except Exception as e:
         # 如果文件日志设置失败，至少还有控制台日志
         logger.error(f"Failed to setup file logging: {e}")
